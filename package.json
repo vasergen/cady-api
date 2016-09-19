@@ -14,7 +14,7 @@
       "pre-commit": [],
       "pre-push": [],
       "post-commit": [
-        "lint:server"
+        "npm run lint:server"
       ],
       "post-checkout": [],
       "post-merge": []
