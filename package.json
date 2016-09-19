@@ -7,6 +7,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "commit-wizard"
   },
+  "config": {
+    "pre-git": {
+      "commit-msg": "simple",
+      "pre-commit": [
+      ],
+      "post-commit": "git status",
+      "pre-push": [
+      ],
+      "post-checkout": [],
+      "post-merge": []
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vasergen/lang.git"
