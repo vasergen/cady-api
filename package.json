@@ -11,11 +11,11 @@
   "config": {
     "pre-git": {
       "commit-msg": "simple",
-      "pre-commit": [],
-      "pre-push": [],
-      "post-commit": [
+      "pre-commit": [
         "npm run lint:server"
       ],
+      "pre-push": [],
+      "post-commit": [],
       "post-checkout": [],
       "post-merge": []
     }
@@ -34,7 +34,8 @@
   "dependencies": {
     "config": "1.21.0",
     "hapi": "15.0.3",
-    "pre-git": "3.10.0"
+    "pre-git": "3.10.0",
+    "winston": "2.2.0"
   },
   "devDependencies": {
     "eslint": "3.5.0"
