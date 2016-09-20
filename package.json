@@ -4,9 +4,12 @@
   "description": "lang",
   "main": "index.js",
   "scripts": {
+    "#####Client#######": "",
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "commit-wizard",
-    "lint:server": "node_modules/.bin/eslint server/**/*.js"
+    "#####Server#######": "",
+    "s:lint": "node_modules/.bin/eslint server/**/*.js",
+    "s:watch": "node_modules/.bin/nodemon server/app.js"
   },
   "config": {
     "pre-git": {
@@ -34,7 +37,11 @@
   "dependencies": {
     "config": "1.21.0",
     "hapi": "15.0.3",
+    "hapi-swagger": "7.2.0",
+    "inert": "4.0.2",
+    "nodemon": "1.10.2",
     "pre-git": "3.10.0",
+    "vision": "4.1.0",
     "winston": "2.2.0"
   },
   "devDependencies": {
