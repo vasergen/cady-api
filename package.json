@@ -4,18 +4,18 @@
   "description": "lang",
   "main": "index.js",
   "scripts": {
-    "#####Client#######": "",
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "commit-wizard",
-    "#####Server#######": "",
-    "s:lint": "node_modules/.bin/eslint server/**/*.js",
-    "s:watch": "node_modules/.bin/nodemon server/app.js"
+    "lint": "node_modules/.bin/eslint server/**/*.js",
+    "start:watch": "node_modules/.bin/nodemon server/app.js",
+    "start": "node server/app.js",
+    "mongo:run": "docker run --name cady-mongo -p 27017:27017 -d -v /home/vasyl/github/cady-api/db/data:/data/db -v /home/vasyl/github/cady-api/db/configdb:/data/configdb mongo"
   },
   "config": {
     "pre-git": {
       "commit-msg": "simple",
       "pre-commit": [
-        "npm run s:lint"
+        "npm run lint"
       ],
       "pre-push": [],
       "post-commit": [],
