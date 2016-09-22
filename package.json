@@ -35,9 +35,11 @@
   },
   "homepage": "https://github.com/vasergen/lang#readme",
   "dependencies": {
+    "bluebird": "3.4.6",
     "config": "1.21.0",
     "hapi": "15.0.3",
     "hapi-swagger": "7.2.0",
+    "mongoose": "4.6.1",
     "nodemon": "1.10.2",
     "pre-git": "3.10.0",
     "winston": "2.2.0"

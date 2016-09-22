@@ -1,13 +1,5 @@
 'use strict'
 
-function GetHello(request, reply) {
-    reply('Hello!')
-}
-
-function GetHelloAsd(request, reply) {
-    reply('Hello! asd')
-}
-
 let routes = [
     {
         method: 'GET',
@@ -27,7 +19,39 @@ let routes = [
             description: 'Returns another hello string',
             tags: ['api']
         }
+    },
+    {
+        method: 'GET',
+        path: '/user',
+        config: {
+            handler: UserCreate,
+            description: 'Create new user',
+            tags: ['api']
+        }
     }
 ]
 
 module.exports = routes
+
+//Handlers
+
+function GetHello(request, reply) {
+    reply('Hello!')
+}
+
+function GetHelloAsd(request, reply) {
+    reply('Hello! asd')
+}
+
+function UserCreate(request, reply) {
+    let User = require('./schemes/user')
+    let user = new User({
+        firstName: 'Igor',
+        email: 'vasergen@gmail.com'
+    })
+
+    user.save()
+        .then((data) => {
+            reply(data)
+        })
+}

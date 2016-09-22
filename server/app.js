@@ -2,16 +2,17 @@
 
 const Hapi = require('hapi')
 const config = require('config')
-const logger = require('./logger')
+const logger = require('./lib/logger')
 const routes = require('./routes')
 const Pack = require('./../package')
+const dbConnect = require('./lib/dbConnect')
 
 const Inert = require('inert')
 const Vision = require('vision')
 const HapiSwagger = require('hapi-swagger')
 
-const port = config.get('server.port')
-const host = config.get('server.host')
+const port = config.get('port')
+const host = config.get('host')
 
 const server = new Hapi.Server()
 
@@ -23,6 +24,7 @@ const options = {
 }
 
 server.connection({host, port})
+const db = dbConnect()
 
 server.register([
     Inert,
