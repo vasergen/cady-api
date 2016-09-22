@@ -1,5 +1,7 @@
 'use strict'
 
+const logger = require('./lib/logger')
+
 let routes = [
     {
         method: 'GET',
@@ -53,5 +55,8 @@ function UserCreate(request, reply) {
     user.save()
         .then((data) => {
             reply(data)
+        })
+        .catch((err) => {
+            logger.error(err)
         })
 }

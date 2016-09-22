@@ -4,7 +4,9 @@ const mongoose = require('./pmongoose.js')
 const logger = require('./logger')
 const config = require('config')
 
-module.exports = function dbConnection() {
+module.exports = dbConnection
+
+function dbConnection() {
     mongoose.connect(config.get('db'))
     const db = mongoose.connection
 
