@@ -4,6 +4,7 @@ const mongoose = require('../lib/pmongoose')
 const BaseSchema = require('./baseSchema')
 const Joi = require('joi')
 
+
 //Mongo Schema
 const UserSchema = BaseSchema({
     firstName: { type: String, trim: true, default: '' },
@@ -19,5 +20,7 @@ UserSchema.statics.joiValidate = {
 
 const UserModel = mongoose.model('User', UserSchema)
 
-//util.inspect(UserModel)
+//const util = require('./../lib/util')
+//util.inspect(UserModel.joiValidate.firstName.default('---').default('AAA'), 1)
+
 module.exports = UserModel
