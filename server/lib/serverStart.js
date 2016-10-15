@@ -28,10 +28,10 @@ module.exports = serverStart
 
 
 function serverStart() {
-    const server = new Hapi.Server()
     const port = config.get('port')
     const host = config.get('host')
 
+    const server = new Hapi.Server()
     server.connection({host, port})
 
     server.register(modules, (err) => {
