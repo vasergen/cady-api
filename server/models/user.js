@@ -12,8 +12,8 @@ const UserSchema = BaseSchema({
 })
 
 UserSchema.statics.joiValidate = {
-    firstName: Joi.string().min(1).max(50),
-    lastName: Joi.string().min(1).max(50),
+    firstName: Joi.string().min(1).max(100),
+    lastName: Joi.string().min(1).max(100),
     email: Joi.string().email()
 }
 

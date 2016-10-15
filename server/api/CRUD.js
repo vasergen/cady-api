@@ -24,6 +24,20 @@ function POST(Model) {
     }
 }
 
+function postPath(Model) {
+    const modelName = getModelName(Model)
+
+    return {
+        path: `/${modelName}`, method: 'POST', handler: POST(Model), config: {
+            description: `Create new ${modelName}`,
+            tags: ['api'],
+            validate: {
+                payload: Model.joiValidate
+            }
+        }
+    }
+}
+
 //GET
 function GET(Model) {
     return function getHandler(request, reply) {
@@ -37,55 +51,6 @@ function GET(Model) {
                 reply(err)
                 logger.error(err)
             })
-    }
-}
-
-//Update
-function PUT(Model) {
-    return function updateHandler(request, reply) {
-        const id = request.params.id
-        const data = request.payload
-        const options = {
-            new: true //Note: by default it is false
-        }
-
-        Model.findByIdAndUpdate(id, data, options)
-            .then((responce) => {
-                reply(responce)
-            })
-            .catch((err) =>{
-                reply(err)
-                logger.error(err)
-            })
-    }
-}
-
-function DELETE(Model) {
-    return function deleteHandler(request, reply) {
-        const id = request.params.id
-
-        Model.remove({_id: id})
-            .then((responce) => {
-                reply(responce)
-            })
-            .catch((err) =>{
-                reply(err)
-                logger.error(err)
-            })
-    }
-}
-
-function postPath(Model) {
-    const modelName = getModelName(Model)
-
-    return {
-        path: `/${modelName}`, method: 'POST', handler: POST(Model), config: {
-            description: `Create new ${modelName}`,
-            tags: ['api'],
-            validate: {
-                payload: Model.joiValidate
-            }
-        }
     }
 }
 
@@ -103,6 +68,27 @@ function getPath(Model) {
                 }
             }
         }
+    }
+}
+
+
+//Put
+function PUT(Model) {
+    return function updateHandler(request, reply) {
+        const id = request.params.id
+        const data = request.payload
+        const options = {
+            new: true //Note: by default it is false
+        }
+
+        Model.findByIdAndUpdate(id, data, options)
+            .then((responce) => {
+                reply(responce)
+            })
+            .catch((err) =>{
+                reply(err)
+                logger.error(err)
+            })
     }
 }
 
@@ -124,6 +110,23 @@ function putPath(Model) {
     }
 }
 
+
+//DELETE
+function DELETE(Model) {
+    return function deleteHandler(request, reply) {
+        const id = request.params.id
+
+        Model.remove({_id: id})
+            .then((responce) => {
+                reply(responce)
+            })
+            .catch((err) =>{
+                reply(err)
+                logger.error(err)
+            })
+    }
+}
+
 function deletePath(Model) {
     const modelName = getModelName(Model)
     const idRegexp = util.getMongoIdRegexp()
@@ -142,17 +145,84 @@ function deletePath(Model) {
     }
 }
 
+//COUNT
+function COUNT(Model) {
+    return function countHandler(request, reply) {
+        Model.count({})
+            .then((responce) => {
+                reply(responce)
+            })
+            .catch((err) =>{
+                reply(err)
+                logger.error(err)
+            })
+    }
+}
+
+function countPath(Model) {
+    const modelName = getModelName(Model)
+    return {
+        path: `/${modelName}/count`, method: 'GET', handler: COUNT(Model), config: {
+            description: `Return count instances in ${modelName} model`,
+            tags: ['api'],
+            validate: {}
+        }
+    }
+}
+
+//LIST
+
+function LIST(Model) {
+    return function findHandler(request, reply) {
+        const limit = request.query.limit
+        const offset = request.query.offset
+
+        Model.find({})
+            .limit(limit)
+            .skip(offset)
+            .then((responce) => {
+                reply(responce)
+            })
+            .catch((err) =>{
+                reply(err)
+                logger.error(err)
+            })
+    }
+}
+
+function listPath(Model) {
+    const modelName = getModelName(Model)
+
+    return {
+        path: `/${modelName}/list`, method: 'GET', handler: LIST(Model), config: {
+            description: `Return list of ${modelName} instances`,
+            tags: ['api'],
+            validate: {
+                query: {
+                    limit: Joi.number().integer().min(1).max(1000).default(10),
+                    offset: Joi.number().integer().min(0).default(0)
+                }
+            }
+        }
+    }
+}
+
 function CRUD(Model) {
     const post = postPath(Model)
     const get_ = getPath(Model)
     const put = putPath(Model)
     const delete_ = deletePath(Model)
+    const count = countPath(Model)
+    const list = listPath(Model)
 
+    //return routes for Hapi
     return [
         post,
         get_,
         put,
-        delete_
+        delete_,
+        count,
+        list
     ]
 }
 
