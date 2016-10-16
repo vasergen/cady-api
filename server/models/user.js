@@ -20,7 +20,4 @@ UserSchema.statics.joiValidate = {
 
 const UserModel = mongoose.model('User', UserSchema)
 
-//const util = require('./../lib/util')
-//util.inspect(UserModel.joiValidate.firstName.default('---').default('AAA'), 1)
-
 module.exports = UserModel

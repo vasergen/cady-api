@@ -5,38 +5,37 @@ const logger = require('./../lib/logger')
 const util = require('./../lib/util')
 const Joi = require('joi')
 
-function JoiLimit() {
+function _JoiLimit() {
     return Joi.number().integer()
         .min(1).max(1000)
         .default(10)
         .description('limit. min = 1, max = 1000')
 }
 
-function JoiOffset() {
+function _JoiOffset() {
     return Joi.number().integer()
         .min(0)
         .default(0)
         .description('offset. min = 0')
 }
 
-function JoiFields() {
+function _JoiFields() {
     const description =
         'You can include or exclude fields in response. Fields should be separated by colon. ' +
         'To exclude field, just add in front of it -, for example: <code>-firstName,-lastname</code>'
 
-    return Joi.string().regex(/[a-zA-Z0-9_,]/)
+    return Joi.string().regex(/^[a-zA-Z0-9_,]+$/)
         .default('')
         .description(description)
 }
 
-function getSelectObjForFieldsInUrl(Model, request) {
+function _getSelectObjForFieldsInUrl(Model, request) {
     const urlFieldsStr = _.get(request.query, 'fields', '')
     const urlFields = urlFieldsStr.split(',').filter(value => value)
 
     //exit if empty fields query in url
     const result = {}
     if(!urlFields.length) {
-        logger.debug(getSelectObjForFieldsInUrl.name, JSON.stringify(result))
         return result
     }
 
@@ -52,40 +51,28 @@ function getSelectObjForFieldsInUrl(Model, request) {
         }
     })
 
-    logger.debug(getSelectObjForFieldsInUrl.name, JSON.stringify(result))
     return result
 }
 
-function getQueryObjForFieldsInUrl(Model, request) {
+function _getQueryObjForFieldsInUrl(Model, request) {
     const fields = _.keys(Model.joiValidate)
     const queryDb = {}
 
     _.forEach(fields, (field) => {
-        if(request.query[field] === '') {
+        let fieldValue = request.query[field]
+
+        if(fieldValue === '' || fieldValue === undefined) {
             return
         }
 
         queryDb[field] = request.query[field]
     })
 
-    logger.debug(getQueryObjForFieldsInUrl.name, JSON.stringify(queryDb))
     return queryDb
 }
 
-function getValidateObjForFieldsInUrl(Model) {
-    const joiValidate = _.assign({}, Model.joiValidate)
-    const result = {}
-
-    _.forEach(joiValidate, (value, key) => {
-        result[key] = value.default('')
-    })
-
-    logger.debug(getValidateObjForFieldsInUrl.name + ' keys:', _.keys(result)) //debug
-    return result
-}
-
 //POST
-function POST(Model) {
+function _POST(Model) {
     return function postHandler (request, reply) {
         logger.debug(postHandler.name)
 
@@ -101,11 +88,11 @@ function POST(Model) {
     }
 }
 
-function postPath(Model) {
+function _postRoute(Model) {
     const modelName = util.getModelName(Model)
 
     return {
-        path: `/${modelName}`, method: 'POST', handler: POST(Model), config: {
+        path: `/${modelName}`, method: 'POST', handler: _POST(Model), config: {
             description: `Create new ${modelName}`,
             tags: ['api'],
             validate: {
@@ -116,12 +103,12 @@ function postPath(Model) {
 }
 
 //GET
-function GET(Model) {
+function _GET(Model) {
     return function getHandler(request, reply) {
         logger.debug(getHandler.name)
 
         const id = request.params.id
-        const select = getSelectObjForFieldsInUrl(Model, request)
+        const select = _getSelectObjForFieldsInUrl(Model, request)
 
         Model.findById(id)
             .select(select)
@@ -133,12 +120,12 @@ function GET(Model) {
     }
 }
 
-function getPath(Model) {
+function _getRoute(Model) {
     const modelName = util.getModelName(Model)
     const idRegexp = util.getMongoIdRegexp()
 
     return {
-        path: `/${modelName}/{id}`, method: 'GET', handler: GET(Model), config: {
+        path: `/${modelName}/{id}`, method: 'GET', handler: _GET(Model), config: {
             description: `Get ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -146,7 +133,7 @@ function getPath(Model) {
                     id: Joi.string().regex(idRegexp)
                 },
                 query: {
-                    fields: JoiFields()
+                    fields: _JoiFields()
                 }
             }
         }
@@ -155,7 +142,7 @@ function getPath(Model) {
 
 
 //Put
-function PUT(Model) {
+function _PUT(Model) {
     return function putHandler(request, reply) {
         logger.debug(putHandler.name)
 
@@ -174,12 +161,12 @@ function PUT(Model) {
     }
 }
 
-function putPath(Model) {
+function _putRoute(Model) {
     const modelName = util.getModelName(Model)
     const idRegexp = util.getMongoIdRegexp()
 
     return {
-        path: `/${modelName}/{id}`, method: 'PUT', handler: PUT(Model), config: {
+        path: `/${modelName}/{id}`, method: 'PUT', handler: _PUT(Model), config: {
             description: `Update ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -193,7 +180,7 @@ function putPath(Model) {
 }
 
 //DELETE
-function DELETE(Model) {
+function _DELETE(Model) {
     return function deleteHandler(request, reply) {
         logger.debug(deleteHandler.name)
 
@@ -208,12 +195,12 @@ function DELETE(Model) {
     }
 }
 
-function deletePath(Model) {
+function _deleteRoute(Model) {
     const modelName = util.getModelName(Model)
     const idRegexp = util.getMongoIdRegexp()
 
     return {
-        path: `/${modelName}/{id}`, method: 'DELETE', handler: DELETE(Model), config: {
+        path: `/${modelName}/{id}`, method: 'DELETE', handler: _DELETE(Model), config: {
             description: `Delete ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -226,11 +213,11 @@ function deletePath(Model) {
 }
 
 //COUNT
-function COUNT(Model) {
+function _COUNT(Model) {
     return function countHandler(request, reply) {
         logger.debug(countHandler.name)
 
-        const queryObj = getQueryObjForFieldsInUrl(Model, request)
+        const queryObj = _getQueryObjForFieldsInUrl(Model, request)
         Model.count(queryObj)
             .then(reply)
             .catch((err) =>{
@@ -240,29 +227,28 @@ function COUNT(Model) {
     }
 }
 
-function countPath(Model) {
+function _countRoute(Model) {
     const modelName = util.getModelName(Model)
-    const validateFields = getValidateObjForFieldsInUrl(Model)
 
     return {
-        path: `/${modelName}/count`, method: 'GET', handler: COUNT(Model), config: {
+        path: `/${modelName}/count`, method: 'GET', handler: _COUNT(Model), config: {
             description: `Return count instances in ${modelName} model`,
             tags: ['api'],
             validate: {
-                query: validateFields
+                query: Model.joiValidate
             }
         }
     }
 }
 
 //LIST
-function LIST(Model) {
+function _LIST(Model) {
     return function listHandler(request, reply) {
         logger.debug(listHandler.name)
 
         const limit = request.query.limit
         const offset = request.query.offset
-        const select = getSelectObjForFieldsInUrl(Model, request)
+        const select = _getSelectObjForFieldsInUrl(Model, request)
 
         Model.find({})
             .select(select)
@@ -276,18 +262,18 @@ function LIST(Model) {
     }
 }
 
-function listPath(Model) {
+function _listRoute(Model) {
     const modelName = util.getModelName(Model)
 
     return {
-        path: `/${modelName}/list`, method: 'GET', handler: LIST(Model), config: {
+        path: `/${modelName}/list`, method: 'GET', handler: _LIST(Model), config: {
             description: `Return list of ${modelName} instances`,
             tags: ['api'],
             validate: {
                 query: {
-                    limit: JoiLimit(),
-                    offset: JoiOffset(),
-                    fields: JoiFields()
+                    limit: _JoiLimit(),
+                    offset: _JoiOffset(),
+                    fields: _JoiFields()
                 }
             }
         }
@@ -295,15 +281,15 @@ function listPath(Model) {
 }
 
 //FIND
-function FIND(Model) {
+function _FIND(Model) {
     return function findHandler(request, reply) {
         logger.debug(findHandler.name)
 
         const limit = request.query.limit
         const offset = request.query.offset
 
-        const queryObj = getQueryObjForFieldsInUrl(Model, request)
-        const select = getSelectObjForFieldsInUrl(Model, request)
+        const queryObj = _getQueryObjForFieldsInUrl(Model, request)
+        const select = _getSelectObjForFieldsInUrl(Model, request)
 
         return Model.find(queryObj)
             .select(select)
@@ -317,33 +303,32 @@ function FIND(Model) {
     }
 }
 
-function findPath(Model) {
+function _findRoute(Model) {
     const modelName = util.getModelName(Model)
-    const validateFields = getValidateObjForFieldsInUrl(Model)
 
     return {
-        path: `/${modelName}/find`, method: 'GET', handler: FIND(Model), config: {
+        path: `/${modelName}/find`, method: 'GET', handler: _FIND(Model), config: {
             description: `Return list of ${modelName} instances`,
             tags: ['api'],
             validate: {
-                query: _.assign({}, validateFields, {
-                    limit: JoiLimit(),
-                    offset: JoiOffset(),
-                    fields: JoiFields()
+                query: _.assign({}, Model.joiValidate, {
+                    limit: _JoiLimit(),
+                    offset: _JoiOffset(),
+                    fields: _JoiFields()
                 })
             }
         }
     }
 }
 
-function CRUD(Model) {
-    const post = postPath(Model)
-    const get_ = getPath(Model)
-    const put = putPath(Model)
-    const delete_ = deletePath(Model)
-    const count = countPath(Model)
-    const list = listPath(Model)
-    const find = findPath(Model)
+function restify(Model) {
+    const post = _postRoute(Model)
+    const get_ = _getRoute(Model)
+    const put = _putRoute(Model)
+    const delete_ = _deleteRoute(Model)
+    const count = _countRoute(Model)
+    const list = _listRoute(Model)
+    const find = _findRoute(Model)
 
     //return routes for Hapi
     return [
@@ -358,12 +343,27 @@ function CRUD(Model) {
 }
 
 module.exports = {
-    CRUD,
-    POST,
-    GET,
-    PUT,
-    postPath,
-    getPath,
-    putPath,
-    deletePath
+    /*private methods*/
+    _JoiLimit,
+    _JoiOffset,
+    _JoiFields,
+    _getSelectObjForFieldsInUrl,
+    _getQueryObjForFieldsInUrl,
+    _POST,
+    _postRoute,
+    _GET,
+    _getRoute,
+    _PUT,
+    _putRoute,
+    _DELETE,
+    _deleteRoute,
+    _COUNT,
+    _countRoute,
+    _LIST,
+    _listRoute,
+    _FIND,
+    _findRoute,
+
+    /*public methods*/
+    restify
 }

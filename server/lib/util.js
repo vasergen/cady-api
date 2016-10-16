@@ -5,7 +5,6 @@ const _ = require('lodash')
 
 function inspect(obj) {
     /*eslint no-console: ["error", { allow: ["log"] }]*/
-
     console.log(util.inspect(obj, { showHidden: false, depth: 1 }))
 }
 

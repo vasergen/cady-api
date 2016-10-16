@@ -4,9 +4,9 @@ const logger = require('./lib/logger')
 const Joi = require('joi')
 const User = require('./models/user')
 const UserAPI = require('./api/userAPI')
-const CRUD = require('./api/CRUD').CRUD
+const restify = require('./api/restify').restify
 
-let userCRUD = CRUD(User)
+let userCRUD = restify(User)
 
 let routes = [
 
