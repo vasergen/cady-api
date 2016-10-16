@@ -29,18 +29,19 @@ function JoiFields() {
         .description(description)
 }
 
-function selectFields(Model, request) {
+function getSelectObjForFieldsInUrl(Model, request) {
     const urlFieldsStr = _.get(request.query, 'fields', '')
     const urlFields = urlFieldsStr.split(',').filter(value => value)
 
     //exit if empty fields query in url
+    const result = {}
     if(!urlFields.length) {
-        return {}
+        logger.debug(getSelectObjForFieldsInUrl.name, JSON.stringify(result))
+        return result
     }
 
     const modelFields = util.getAllModelFields(Model)
 
-    const result = {}
     _.forEach(modelFields, (field) => {
         if(_.includes(urlFields, field)) {
             result[field] = 1
@@ -51,10 +52,11 @@ function selectFields(Model, request) {
         }
     })
 
+    logger.debug(getSelectObjForFieldsInUrl.name, JSON.stringify(result))
     return result
 }
 
-function queryDbFromUrl(Model, request) {
+function getQueryObjForFieldsInUrl(Model, request) {
     const fields = _.keys(Model.joiValidate)
     const queryDb = {}
 
@@ -66,12 +68,27 @@ function queryDbFromUrl(Model, request) {
         queryDb[field] = request.query[field]
     })
 
+    logger.debug(getQueryObjForFieldsInUrl.name, JSON.stringify(queryDb))
     return queryDb
+}
+
+function getValidateObjForFieldsInUrl(Model) {
+    const joiValidate = _.assign({}, Model.joiValidate)
+    const result = {}
+
+    _.forEach(joiValidate, (value, key) => {
+        result[key] = value.default('')
+    })
+
+    logger.debug(getValidateObjForFieldsInUrl.name + ' keys:', _.keys(result)) //debug
+    return result
 }
 
 //POST
 function POST(Model) {
-    return function createHandler (request, reply) {
+    return function postHandler (request, reply) {
+        logger.debug(postHandler.name)
+
         let data = request.payload
         let user = new Model(data)
 
@@ -101,8 +118,10 @@ function postPath(Model) {
 //GET
 function GET(Model) {
     return function getHandler(request, reply) {
+        logger.debug(getHandler.name)
+
         const id = request.params.id
-        const select = selectFields(Model, request)
+        const select = getSelectObjForFieldsInUrl(Model, request)
 
         Model.findById(id)
             .select(select)
@@ -137,7 +156,9 @@ function getPath(Model) {
 
 //Put
 function PUT(Model) {
-    return function updateHandler(request, reply) {
+    return function putHandler(request, reply) {
+        logger.debug(putHandler.name)
+
         const id = request.params.id
         const data = request.payload
         const options = {
@@ -171,10 +192,11 @@ function putPath(Model) {
     }
 }
 
-
 //DELETE
 function DELETE(Model) {
     return function deleteHandler(request, reply) {
+        logger.debug(deleteHandler.name)
+
         const id = request.params.id
 
         Model.remove({_id: id})
@@ -206,7 +228,10 @@ function deletePath(Model) {
 //COUNT
 function COUNT(Model) {
     return function countHandler(request, reply) {
-        Model.count({})
+        logger.debug(countHandler.name)
+
+        const queryObj = getQueryObjForFieldsInUrl(Model, request)
+        Model.count(queryObj)
             .then(reply)
             .catch((err) =>{
                 reply(err)
@@ -217,21 +242,27 @@ function COUNT(Model) {
 
 function countPath(Model) {
     const modelName = util.getModelName(Model)
+    const validateFields = getValidateObjForFieldsInUrl(Model)
+
     return {
         path: `/${modelName}/count`, method: 'GET', handler: COUNT(Model), config: {
             description: `Return count instances in ${modelName} model`,
             tags: ['api'],
-            validate: {}
+            validate: {
+                query: validateFields
+            }
         }
     }
 }
 
 //LIST
 function LIST(Model) {
-    return function findHandler(request, reply) {
+    return function listHandler(request, reply) {
+        logger.debug(listHandler.name)
+
         const limit = request.query.limit
         const offset = request.query.offset
-        const select = selectFields(Model, request)
+        const select = getSelectObjForFieldsInUrl(Model, request)
 
         Model.find({})
             .select(select)
@@ -266,13 +297,15 @@ function listPath(Model) {
 //FIND
 function FIND(Model) {
     return function findHandler(request, reply) {
+        logger.debug(findHandler.name)
+
         const limit = request.query.limit
         const offset = request.query.offset
 
-        const queryDb = queryDbFromUrl(Model, request)
-        const select = selectFields(Model, request)
+        const queryObj = getQueryObjForFieldsInUrl(Model, request)
+        const select = getSelectObjForFieldsInUrl(Model, request)
 
-        Model.find(queryDb)
+        return Model.find(queryObj)
             .select(select)
             .limit(limit)
             .skip(offset)
@@ -286,26 +319,18 @@ function FIND(Model) {
 
 function findPath(Model) {
     const modelName = util.getModelName(Model)
-
-    //query params in url
-    const queryUrl = {
-        limit: JoiLimit(),
-        offset: JoiOffset(),
-        fields: JoiFields()
-    }
-
-    const joiValidate = _.assign({}, Model.joiValidate)
-
-    _.forEach(joiValidate, (value, key) => {
-        queryUrl[key] = value.default('')
-    })
+    const validateFields = getValidateObjForFieldsInUrl(Model)
 
     return {
         path: `/${modelName}/find`, method: 'GET', handler: FIND(Model), config: {
             description: `Return list of ${modelName} instances`,
             tags: ['api'],
             validate: {
-                query: queryUrl
+                query: _.assign({}, validateFields, {
+                    limit: JoiLimit(),
+                    offset: JoiOffset(),
+                    fields: JoiFields()
+                })
             }
         }
     }

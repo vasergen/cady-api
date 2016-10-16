@@ -10,7 +10,8 @@ logger.add(logger.transports.Console, {'timestamp':true, colorize: true})
 logger.addColors({
     info: 'blue',
     error: 'red',
-    warn: 'yellow'
+    warn: 'yellow',
+    debug: 'green'
 })
 
 module.exports = logger
