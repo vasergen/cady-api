@@ -23,7 +23,7 @@ function BaseSchema(schema, options) {
         Object.assign({}, baseOptions, options)
     )
 
-    //Add joiValidate
+    //Add joiValidate, joiValidate should be used only for validation
     Schema.statics.joiValidate = {}
 
     return Schema

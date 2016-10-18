@@ -5,6 +5,11 @@ const logger = require('./../lib/logger')
 const util = require('./../lib/util')
 const Joi = require('joi')
 
+/**
+ * Joi validation object for limit query parameter in url
+ * @returns {*}
+ * @private
+ */
 function _JoiLimit() {
     return Joi.number().integer()
         .min(1).max(1000)
@@ -12,6 +17,11 @@ function _JoiLimit() {
         .description('limit. min = 1, max = 1000')
 }
 
+/**
+ * Joi validation object for offset query parameter in url
+ * @returns {*}
+ * @private
+ */
 function _JoiOffset() {
     return Joi.number().integer()
         .min(0)
@@ -19,6 +29,11 @@ function _JoiOffset() {
         .description('offset. min = 0')
 }
 
+/**
+ * Joi validation object for fields query parameter in url
+ * @returns {*}
+ * @private
+ */
 function _JoiFields() {
     const description =
         'You can include or exclude fields in response. Fields should be separated by colon. ' +
@@ -29,7 +44,18 @@ function _JoiFields() {
         .description(description)
 }
 
-function _getSelectObjForFieldsInUrl(Model, request) {
+/**
+ * Generate object from fields query parameter in url to select fields from mongodb.
+ * To include field just add it name, to exclude field need to prepend it with sign -.
+ * Fields should be separated by colon.
+ * For example, for http:host.com/api?fields=name,age,-id
+ * it will return {name: 1,age: 1, id: 0}
+ * @param Model
+ * @param request
+ * @returns {{}}
+ * @private
+ */
+function _getSelectObjFromFieldsInUrl(Model, request) {
     const urlFieldsStr = _.get(request.query, 'fields', '')
     const urlFields = urlFieldsStr.split(',').filter(value => value)
 
@@ -54,8 +80,17 @@ function _getSelectObjForFieldsInUrl(Model, request) {
     return result
 }
 
-function _getQueryObjForFieldsInUrl(Model, request) {
-    const fields = _.keys(Model.joiValidate)
+/**
+ * Generate query object to make query to mongodb.
+ * For example, for url http://host.com/api?firstname=bob&age=26
+ * it will return {firstname='bob', age='26'}
+ * @param Model
+ * @param request
+ * @returns {{}}
+ * @private
+ */
+function _getQueryObjFromFieldsInUrl(Model, request) {
+    const fields = util.getSchemaModelFields(Model)
     const queryDb = {}
 
     _.forEach(fields, (field) => {
@@ -71,11 +106,18 @@ function _getQueryObjForFieldsInUrl(Model, request) {
     return queryDb
 }
 
-//POST
-function _POST(Model) {
-    return function postHandler (request, reply) {
-        logger.debug(postHandler.name)
+/**
+ * POST /modelname
+ *
+ * Create post route for Model.
+ * @param Model
+ * @returns {{path: *, method: string, handler: function, config: {}}}
+ * @private
+ */
+function _postRoute(Model) {
+    const modelName = util.getModelName(Model)
 
+    function postHandler (request, reply) {
         let data = request.payload
         let user = new Model(data)
 
@@ -86,13 +128,9 @@ function _POST(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _postRoute(Model) {
-    const modelName = util.getModelName(Model)
 
     return {
-        path: `/${modelName}`, method: 'POST', handler: _POST(Model), config: {
+        path: `/${modelName}`, method: 'POST', handler: postHandler, config: {
             description: `Create new ${modelName}`,
             tags: ['api'],
             validate: {
@@ -102,13 +140,21 @@ function _postRoute(Model) {
     }
 }
 
-//GET
-function _GET(Model) {
-    return function getHandler(request, reply) {
-        logger.debug(getHandler.name)
+/**
+ * GET /modelname/{id}
+ *
+ * Get model instance by Id
+ * @param Model
+ * @returns {{path: *, method: string, handler: function, config: {}}}
+ * @private
+ */
+function _getRoute(Model) {
+    const modelName = util.getModelName(Model)
+    const idRegexp = util.getMongoIdRegexp()
 
+    function getHandler(request, reply) {
         const id = request.params.id
-        const select = _getSelectObjForFieldsInUrl(Model, request)
+        const select = _getSelectObjFromFieldsInUrl(Model, request)
 
         Model.findById(id)
             .select(select)
@@ -118,14 +164,9 @@ function _GET(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _getRoute(Model) {
-    const modelName = util.getModelName(Model)
-    const idRegexp = util.getMongoIdRegexp()
 
     return {
-        path: `/${modelName}/{id}`, method: 'GET', handler: _GET(Model), config: {
+        path: `/${modelName}/{id}`, method: 'GET', handler: getHandler, config: {
             description: `Get ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -140,17 +181,22 @@ function _getRoute(Model) {
     }
 }
 
+/**
+ * PUT /modelname/{id}
+ *
+ * Update model instance by Id
+ * @param Model
+ * @returns {{path: *, method: string, handler: putHandler, config: object}}
+ * @private
+ */
+function _putRoute(Model) {
+    const modelName = util.getModelName(Model)
+    const idRegexp = util.getMongoIdRegexp()
 
-//Put
-function _PUT(Model) {
-    return function putHandler(request, reply) {
-        logger.debug(putHandler.name)
-
+    function putHandler(request, reply) {
         const id = request.params.id
         const data = request.payload
-        const options = {
-            new: true //Note: by default it is false
-        }
+        const options = {new: true} //Note: by default it is false
 
         Model.findByIdAndUpdate(id, data, options)
             .then(reply)
@@ -159,14 +205,9 @@ function _PUT(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _putRoute(Model) {
-    const modelName = util.getModelName(Model)
-    const idRegexp = util.getMongoIdRegexp()
 
     return {
-        path: `/${modelName}/{id}`, method: 'PUT', handler: _PUT(Model), config: {
+        path: `/${modelName}/{id}`, method: 'PUT', handler: putHandler, config: {
             description: `Update ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -179,11 +220,19 @@ function _putRoute(Model) {
     }
 }
 
-//DELETE
-function _DELETE(Model) {
-    return function deleteHandler(request, reply) {
-        logger.debug(deleteHandler.name)
+/**
+ * DELETE /modelname/{id}
+ *
+ * Delete model instance by Id
+ * @param Model
+ * @returns {{path: *, method: string, handler: deleteHandler, config: *}}
+ * @private
+ */
+function _deleteRoute(Model) {
+    const modelName = util.getModelName(Model)
+    const idRegexp = util.getMongoIdRegexp()
 
+    function deleteHandler(request, reply) {
         const id = request.params.id
 
         Model.remove({_id: id})
@@ -193,14 +242,9 @@ function _DELETE(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _deleteRoute(Model) {
-    const modelName = util.getModelName(Model)
-    const idRegexp = util.getMongoIdRegexp()
 
     return {
-        path: `/${modelName}/{id}`, method: 'DELETE', handler: _DELETE(Model), config: {
+        path: `/${modelName}/{id}`, method: 'DELETE', handler: deleteHandler, config: {
             description: `Delete ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -212,12 +256,19 @@ function _deleteRoute(Model) {
     }
 }
 
-//COUNT
-function _COUNT(Model) {
-    return function countHandler(request, reply) {
-        logger.debug(countHandler.name)
+/**
+ * GET /modelname/count
+ *
+ * Calculate count instances in collection. There is also ability to add some condition in query string
+ * @param Model
+ * @returns {{path: *, method: string, handler: countHandler, config: *}}}
+ * @private
+ */
+function _countRoute(Model) {
+    const modelName = util.getModelName(Model)
 
-        const queryObj = _getQueryObjForFieldsInUrl(Model, request)
+    function countHandler(request, reply) {
+        const queryObj = _getQueryObjFromFieldsInUrl(Model, request)
         Model.count(queryObj)
             .then(reply)
             .catch((err) =>{
@@ -225,13 +276,9 @@ function _COUNT(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _countRoute(Model) {
-    const modelName = util.getModelName(Model)
 
     return {
-        path: `/${modelName}/count`, method: 'GET', handler: _COUNT(Model), config: {
+        path: `/${modelName}/count`, method: 'GET', handler: countHandler, config: {
             description: `Return count instances in ${modelName} model`,
             tags: ['api'],
             validate: {
@@ -241,14 +288,21 @@ function _countRoute(Model) {
     }
 }
 
-//LIST
-function _LIST(Model) {
-    return function listHandler(request, reply) {
-        logger.debug(listHandler.name)
+/**
+ * GET /modelname/list
+ *
+ * Get list of collection instances
+ * @param Model
+ * @returns {{path: *, method: string, handler: listHandler, config: *}}
+ * @private
+ */
+function _listRoute(Model) {
+    const modelName = util.getModelName(Model)
 
+    function listHandler(request, reply) {
         const limit = request.query.limit
         const offset = request.query.offset
-        const select = _getSelectObjForFieldsInUrl(Model, request)
+        const select = _getSelectObjFromFieldsInUrl(Model, request)
 
         Model.find({})
             .select(select)
@@ -260,13 +314,9 @@ function _LIST(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _listRoute(Model) {
-    const modelName = util.getModelName(Model)
 
     return {
-        path: `/${modelName}/list`, method: 'GET', handler: _LIST(Model), config: {
+        path: `/${modelName}/list`, method: 'GET', handler: listHandler, config: {
             description: `Return list of ${modelName} instances`,
             tags: ['api'],
             validate: {
@@ -280,16 +330,23 @@ function _listRoute(Model) {
     }
 }
 
-//FIND
-function _FIND(Model) {
-    return function findHandler(request, reply) {
-        logger.debug(findHandler.name)
+/**
+ * GET /modelname/find
+ *
+ * Return list of collection instances by given criteria
+ * @param Model
+ * @returns {{path: *, method: string, handler: findHandler, config: *}}
+ * @private
+ */
+function _findRoute(Model) {
+    const modelName = util.getModelName(Model)
 
+    function findHandler(request, reply) {
         const limit = request.query.limit
         const offset = request.query.offset
 
-        const queryObj = _getQueryObjForFieldsInUrl(Model, request)
-        const select = _getSelectObjForFieldsInUrl(Model, request)
+        const queryObj = _getQueryObjFromFieldsInUrl(Model, request)
+        const select = _getSelectObjFromFieldsInUrl(Model, request)
 
         return Model.find(queryObj)
             .select(select)
@@ -301,13 +358,9 @@ function _FIND(Model) {
                 logger.error(err)
             })
     }
-}
-
-function _findRoute(Model) {
-    const modelName = util.getModelName(Model)
 
     return {
-        path: `/${modelName}/find`, method: 'GET', handler: _FIND(Model), config: {
+        path: `/${modelName}/find`, method: 'GET', handler: findHandler, config: {
             description: `Return list of ${modelName} instances`,
             tags: ['api'],
             validate: {
@@ -321,24 +374,20 @@ function _findRoute(Model) {
     }
 }
 
+/**
+ * Return restify routes for Model
+ * @param Model
+ * @returns {*[]}
+ */
 function restify(Model) {
-    const post = _postRoute(Model)
-    const get_ = _getRoute(Model)
-    const put = _putRoute(Model)
-    const delete_ = _deleteRoute(Model)
-    const count = _countRoute(Model)
-    const list = _listRoute(Model)
-    const find = _findRoute(Model)
-
-    //return routes for Hapi
     return [
-        post,
-        get_,
-        put,
-        delete_,
-        count,
-        list,
-        find
+        _postRoute(Model),
+        _getRoute(Model),
+        _putRoute(Model),
+        _deleteRoute(Model),
+        _countRoute(Model),
+        _listRoute(Model),
+        _findRoute(Model)
     ]
 }
 
@@ -347,23 +396,15 @@ module.exports = {
     _JoiLimit,
     _JoiOffset,
     _JoiFields,
-    _getSelectObjForFieldsInUrl,
-    _getQueryObjForFieldsInUrl,
-    _POST,
+    _getSelectObjFromFieldsInUrl,
+    _getQueryObjFromFieldsInUrl,
     _postRoute,
-    _GET,
     _getRoute,
-    _PUT,
     _putRoute,
-    _DELETE,
     _deleteRoute,
-    _COUNT,
     _countRoute,
-    _LIST,
     _listRoute,
-    _FIND,
     _findRoute,
-
     /*public methods*/
     restify
 }

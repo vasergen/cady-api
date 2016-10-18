@@ -89,9 +89,9 @@ describe('_JoiFields', () => {
     })
 })
 
-describe('_getSelectObjForFieldsInUrl', () => {
+describe('_getSelectObjFromFieldsInUrl', () => {
     let Model
-    let _getSelectObjForFieldsInUrl
+    let _getSelectObjFromFieldsInUrl
     let Schema = mongoose.Schema({
         firstName: { type: String},
         lastName: { type: String},
@@ -100,12 +100,12 @@ describe('_getSelectObjForFieldsInUrl', () => {
     Model = mongoose.model('TestModel', Schema)
 
     beforeEach(() => {
-        _getSelectObjForFieldsInUrl = restify._getSelectObjForFieldsInUrl
+        _getSelectObjFromFieldsInUrl = restify._getSelectObjFromFieldsInUrl
     })
 
     it('should return selectObj', () => {
         let request = {query: {fields: 'firstName,-lastName,email,notExistField'}}
-        let result = _getSelectObjForFieldsInUrl(Model, request)
+        let result = _getSelectObjFromFieldsInUrl(Model, request)
 
         let expected = {
             firstName: 1,
@@ -118,7 +118,7 @@ describe('_getSelectObjForFieldsInUrl', () => {
 
     it('should return empty object', () => {
         let request = {query: {fields: ''}}
-        let result = _getSelectObjForFieldsInUrl(Model, request)
+        let result = _getSelectObjFromFieldsInUrl(Model, request)
 
         let expected = {}
         expect(result).to.deep.equal(expected)
@@ -127,16 +127,16 @@ describe('_getSelectObjForFieldsInUrl', () => {
 
 describe('_getQueryObjForFieldsInUrl', () => {
     let Model
-    let _getQueryObjForFieldsInUrl
+    let _getQueryObjFromFieldsInUrl
     beforeEach(() => {
-        _getQueryObjForFieldsInUrl = restify._getQueryObjForFieldsInUrl
-        Model = {
-            joiValidate: {
-                firstName: Joi.string().min(1).max(100),
-                lastName: Joi.string().min(1).max(100),
-                email: Joi.string().email()
-            }
-        }
+        _getQueryObjFromFieldsInUrl = restify._getQueryObjFromFieldsInUrl
+        let Schema = mongoose.Schema({
+            firstName: {type: String},
+            lastName: {type: String},
+            email: {type: String}
+        })
+
+        Model = mongoose.model('Test', Schema)
     })
 
     it('should return queryDb object', () => {
@@ -145,7 +145,7 @@ describe('_getQueryObjForFieldsInUrl', () => {
             lastName: 'Lee',
             notExistField: 'notExistField'
         }}
-        let result = _getQueryObjForFieldsInUrl(Model, request)
+        let result = _getQueryObjFromFieldsInUrl(Model, request)
         let expected = {
             lastName: 'Lee'
         }

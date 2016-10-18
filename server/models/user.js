@@ -4,7 +4,6 @@ const mongoose = require('../lib/pmongoose')
 const BaseSchema = require('./baseSchema')
 const Joi = require('joi')
 
-
 //Mongo Schema
 const UserSchema = BaseSchema({
     firstName: { type: String, trim: true, default: '' },
