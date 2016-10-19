@@ -2,14 +2,22 @@
 
 const logger = require('./lib/logger')
 const Joi = require('joi')
-const User = require('./models/user')
-const UserAPI = require('./api/userAPI')
 const restify = require('./api/restify').restify
 
-let userCRUD = restify(User)
+//Models
+const User = require('./models/user')
+const Vocabulary = require('./models/vocabulary')
+const Dictionary = require('./models/dictionary')
 
-let routes = [
+//Restify Models
+const userRestifyRoutes = restify(User)
+const vocabularyRestifyRoutes = restify(Vocabulary)
+const dictionaryRestifyRoutes = restify(Dictionary)
 
-]
+let routes = [].concat(
+    userRestifyRoutes,
+    vocabularyRestifyRoutes,
+    dictionaryRestifyRoutes
+)
 
-module.exports = [].concat(userCRUD, routes)
+module.exports = routes

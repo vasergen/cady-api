@@ -8,12 +8,14 @@ const Joi = require('joi')
 const UserSchema = BaseSchema({
     firstName: { type: String, trim: true, default: '' },
     lastName: { type: String, trim: true, default: '' },
-    email: { type: String, trim: true, default: '' }
+    email: { type: String, trim: true, default: '' },
+    languages: {type: Array, trim: true, default: []},
+    lastLanguage: {type: String, trim: true, default: ''}
 })
 
 UserSchema.statics.joiValidate = {
-    firstName: Joi.string().min(1).max(100),
-    lastName: Joi.string().min(1).max(100),
+    firstName: Joi.string().alphanum().min(1).max(100),
+    lastName: Joi.string().alphanum().min(1).max(100),
     email: Joi.string().email()
 }
 
