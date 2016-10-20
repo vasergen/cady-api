@@ -1,5 +1,6 @@
 ===taks===
 use plural form
+use error codes 404, 500
 wrap response in a object
 
 

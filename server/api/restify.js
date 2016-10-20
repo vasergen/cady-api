@@ -107,15 +107,16 @@ function _getQueryObjFromFieldsInUrl(Model, request) {
 }
 
 /**
- * POST /modelname
+ * POST /collection
  *
- * Create post route for Model.
+ * Create post route for collection.
  * @param Model
  * @returns {{path: *, method: string, handler: function, config: {}}}
  * @private
  */
 function _postRoute(Model) {
     const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
 
     function postHandler (request, reply) {
         let data = request.payload
@@ -130,7 +131,7 @@ function _postRoute(Model) {
     }
 
     return {
-        path: `/${modelName}`, method: 'POST', handler: postHandler, config: {
+        path: `/${collectionName}`, method: 'POST', handler: postHandler, config: {
             description: `Create new ${modelName}`,
             tags: ['api'],
             validate: {
@@ -141,15 +142,16 @@ function _postRoute(Model) {
 }
 
 /**
- * GET /modelname/{id}
+ * GET /collection/{id}
  *
- * Get model instance by Id
+ * Get collection instance by Id
  * @param Model
  * @returns {{path: *, method: string, handler: function, config: {}}}
  * @private
  */
 function _getRoute(Model) {
     const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
     const idRegexp = util.getMongoIdRegexp()
 
     function getHandler(request, reply) {
@@ -166,7 +168,7 @@ function _getRoute(Model) {
     }
 
     return {
-        path: `/${modelName}/{id}`, method: 'GET', handler: getHandler, config: {
+        path: `/${collectionName}/{id}`, method: 'GET', handler: getHandler, config: {
             description: `Get ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -182,15 +184,16 @@ function _getRoute(Model) {
 }
 
 /**
- * PUT /modelname/{id}
+ * PUT /collection/{id}
  *
- * Update model instance by Id
+ * Update collection instance by Id
  * @param Model
  * @returns {{path: *, method: string, handler: putHandler, config: object}}
  * @private
  */
 function _putRoute(Model) {
     const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
     const idRegexp = util.getMongoIdRegexp()
 
     function putHandler(request, reply) {
@@ -207,7 +210,7 @@ function _putRoute(Model) {
     }
 
     return {
-        path: `/${modelName}/{id}`, method: 'PUT', handler: putHandler, config: {
+        path: `/${collectionName}/{id}`, method: 'PUT', handler: putHandler, config: {
             description: `Update ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -221,15 +224,16 @@ function _putRoute(Model) {
 }
 
 /**
- * DELETE /modelname/{id}
+ * DELETE /collection/{id}
  *
- * Delete model instance by Id
+ * Delete collection instance by Id
  * @param Model
  * @returns {{path: *, method: string, handler: deleteHandler, config: *}}
  * @private
  */
 function _deleteRoute(Model) {
     const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
     const idRegexp = util.getMongoIdRegexp()
 
     function deleteHandler(request, reply) {
@@ -244,7 +248,7 @@ function _deleteRoute(Model) {
     }
 
     return {
-        path: `/${modelName}/{id}`, method: 'DELETE', handler: deleteHandler, config: {
+        path: `/${collectionName}/{id}`, method: 'DELETE', handler: deleteHandler, config: {
             description: `Delete ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -257,15 +261,17 @@ function _deleteRoute(Model) {
 }
 
 /**
- * GET /modelname/count
+ * GET /collection/count
  *
- * Calculate count instances in collection. There is also ability to add some condition in query string
+ * Calculate count instances in collection. There is also ability to add condition in query string
+ * For example: http://host.com/collection/count?name=bob&age=26
  * @param Model
  * @returns {{path: *, method: string, handler: countHandler, config: *}}}
  * @private
  */
 function _countRoute(Model) {
     const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
 
     function countHandler(request, reply) {
         const queryObj = _getQueryObjFromFieldsInUrl(Model, request)
@@ -278,7 +284,7 @@ function _countRoute(Model) {
     }
 
     return {
-        path: `/${modelName}/count`, method: 'GET', handler: countHandler, config: {
+        path: `/${collectionName}/count`, method: 'GET', handler: countHandler, config: {
             description: `Return count instances in ${modelName} model`,
             tags: ['api'],
             validate: {
@@ -289,62 +295,20 @@ function _countRoute(Model) {
 }
 
 /**
- * GET /modelname/list
+ * GET /collection/
  *
- * Get list of collection instances
+ * Return list of collection instances by given criteria
  * @param Model
- * @returns {{path: *, method: string, handler: listHandler, config: *}}
+ * @returns {{path: *, method: string, handler: getCollectionHandler, config: *}}
  * @private
  */
 function _listRoute(Model) {
     const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
 
-    function listHandler(request, reply) {
+    function getCollectionHandler(request, reply) {
         const limit = request.query.limit
         const offset = request.query.offset
-        const select = _getSelectObjFromFieldsInUrl(Model, request)
-
-        Model.find({})
-            .select(select)
-            .limit(limit)
-            .skip(offset)
-            .then(reply)
-            .catch((err) =>{
-                reply(err)
-                logger.error(err)
-            })
-    }
-
-    return {
-        path: `/${modelName}/list`, method: 'GET', handler: listHandler, config: {
-            description: `Return list of ${modelName} instances`,
-            tags: ['api'],
-            validate: {
-                query: {
-                    limit: _JoiLimit(),
-                    offset: _JoiOffset(),
-                    fields: _JoiFields()
-                }
-            }
-        }
-    }
-}
-
-/**
- * GET /modelname/find
- *
- * Return list of collection instances by given criteria
- * @param Model
- * @returns {{path: *, method: string, handler: findHandler, config: *}}
- * @private
- */
-function _findRoute(Model) {
-    const modelName = util.getModelName(Model)
-
-    function findHandler(request, reply) {
-        const limit = request.query.limit
-        const offset = request.query.offset
-
         const queryObj = _getQueryObjFromFieldsInUrl(Model, request)
         const select = _getSelectObjFromFieldsInUrl(Model, request)
 
@@ -360,7 +324,7 @@ function _findRoute(Model) {
     }
 
     return {
-        path: `/${modelName}/find`, method: 'GET', handler: findHandler, config: {
+        path: `/${collectionName}`, method: 'GET', handler: getCollectionHandler, config: {
             description: `Return list of ${modelName} instances`,
             tags: ['api'],
             validate: {
@@ -386,8 +350,7 @@ function restify(Model) {
         _putRoute(Model),
         _deleteRoute(Model),
         _countRoute(Model),
-        _listRoute(Model),
-        _findRoute(Model)
+        _listRoute(Model)
     ]
 }
 
@@ -404,7 +367,6 @@ module.exports = {
     _deleteRoute,
     _countRoute,
     _listRoute,
-    _findRoute,
     /*public methods*/
     restify
 }
