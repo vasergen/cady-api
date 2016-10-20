@@ -1,1 +1,9 @@
+===taks===
+use plural form
+wrap response in a object
+
+
+
+===backlog===
 db structure
+
