@@ -186,9 +186,9 @@ function _getRoute(Model) {
 /**
  * PUT /collection/{id}
  *
- * Update collection instance by Id
+ * Replace (!) instance by id. If you want to update use PATCH method
  * @param Model
- * @returns {{path: *, method: string, handler: putHandler, config: object}}
+ * @returns {{path: *, method: string, handler: pathHandler, config: object}}
  * @private
  */
 function _putRoute(Model) {
@@ -197,6 +197,50 @@ function _putRoute(Model) {
     const idRegexp = util.getMongoIdRegexp()
 
     function putHandler(request, reply) {
+        const id = request.params.id
+        const data = request.payload
+        const options = {new: true, upsert: true}
+
+        const instance = new Model(data).toObject()
+        delete instance._id
+
+        Model.findByIdAndUpdate(id, instance, options)
+            .then(reply)
+            .catch((err) =>{
+                reply(err)
+                logger.error(err)
+            })
+    }
+
+    return {
+        path: `/${collectionName}/{id}`, method: 'PUT', handler: putHandler, config: {
+            description: `Replace(!) the instance of ${modelName} by id.`,
+            notes: 'If you just want to update use PATCH method',
+            tags: ['api'],
+            validate: {
+                params: {
+                    id: Joi.string().regex(idRegexp)
+                },
+                payload: Model.joiValidate
+            }
+        }
+    }
+}
+
+/**
+ * PATCH /collection/{id}
+ *
+ * Update collection instance by Id
+ * @param Model
+ * @returns {{path: *, method: string, handler: pathHandler, config: object}}
+ * @private
+ */
+function _pathRoute(Model) {
+    const modelName = util.getModelName(Model)
+    const collectionName = util.getCollectionName(Model)
+    const idRegexp = util.getMongoIdRegexp()
+
+    function pathHandler(request, reply) {
         const id = request.params.id
         const data = request.payload
         const options = {new: true} //Note: by default it is false
@@ -210,7 +254,7 @@ function _putRoute(Model) {
     }
 
     return {
-        path: `/${collectionName}/{id}`, method: 'PUT', handler: putHandler, config: {
+        path: `/${collectionName}/{id}`, method: 'PATCH', handler: pathHandler, config: {
             description: `Update ${modelName} instance by id`,
             tags: ['api'],
             validate: {
@@ -347,6 +391,7 @@ function restify(Model) {
     return [
         _postRoute(Model),
         _getRoute(Model),
+        _pathRoute(Model),
         _putRoute(Model),
         _deleteRoute(Model),
         _countRoute(Model),
@@ -363,6 +408,7 @@ module.exports = {
     _getQueryObjFromFieldsInUrl,
     _postRoute,
     _getRoute,
+    _pathRoute,
     _putRoute,
     _deleteRoute,
     _countRoute,
