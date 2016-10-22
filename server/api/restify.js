@@ -4,6 +4,8 @@ const _ = require('lodash')
 const logger = require('./../lib/logger')
 const util = require('./../lib/util')
 const Joi = require('joi')
+const header = require('./headers')
+const boom = require('boom')
 
 /**
  * Joi validation object for limit query parameter in url
@@ -123,7 +125,9 @@ function _postRoute(Model) {
         let user = new Model(data)
 
         user.save()
-            .then(reply)
+            .then((response) => {
+                return reply(response).code(201)
+            })
             .catch((err) => {
                 reply(err)
                 logger.error(err)
@@ -160,7 +164,13 @@ function _getRoute(Model) {
 
         Model.findById(id)
             .select(select)
-            .then(reply)
+            .then((response) => {
+                if(!response) {
+                    return reply(boom.notFound())
+                }
+
+                return reply(response)
+            })
             .catch((err) =>{
                 reply(err)
                 logger.error(err)
@@ -351,25 +361,32 @@ function _listRoute(Model) {
     const collectionName = util.getCollectionName(Model)
 
     function getCollectionHandler(request, reply) {
-        const limit = request.query.limit
-        const offset = request.query.offset
+        const {limit, offset} = request.query
         const queryObj = _getQueryObjFromFieldsInUrl(Model, request)
         const select = _getSelectObjFromFieldsInUrl(Model, request)
 
-        return Model.find(queryObj)
-            .select(select)
-            .limit(limit)
-            .skip(offset)
-            .then(reply)
-            .catch((err) =>{
+        const query = Model.find(queryObj).select(select).limit(limit).skip(offset)
+        const count = Model.count(queryObj)
+
+        Promise.all([query, count])
+            .then(([response, countData]) => {
+                if(!response || !response.length ) {
+                    return reply(boom.notFound())
+                }
+
+                return reply(response)
+                    .header(header.X_TOTAL_COUNT, countData)
+            })
+            .catch((err) => {
                 reply(err)
-                logger.error(err)
             })
     }
 
     return {
         path: `/${collectionName}`, method: 'GET', handler: getCollectionHandler, config: {
             description: `Return list of ${modelName} instances`,
+            notes: `Meta data:
+                return header ${header.X_TOTAL_COUNT} with count instances by given criteria`,
             tags: ['api'],
             validate: {
                 query: _.assign({}, Model.joiValidate, {

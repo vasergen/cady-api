@@ -17,4 +17,3 @@ server.on('response', function (request) {
 
     logger.info(message)
 });
-

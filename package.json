@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "commit-wizard",
     "lint": "node_modules/.bin/eslint server/**/*.js",
-    "start:watch": "node_modules/.bin/nodemon server/app.js",
-    "start": "node server/app.js",
+    "start:watch": "node_modules/.bin/nodemon --harmony_destructuring --harmony_default_parameters server/app.js",
+    "start": "node --harmony_destructuring --harmony_default_parameters server/app.js",
     "mongo:run": "docker run --name cady-mongo -p 27017:27017 -d -v /home/vasyl/github/cady-api/db/data:/data/db -v /home/vasyl/github/cady-api/db/configdb:/data/configdb mongo"
   },
   "config": {
@@ -38,6 +38,7 @@
     "babel": "6.5.2",
     "babel-register": "6.16.3",
     "bluebird": "3.4.6",
+    "boom": "4.2.0",
     "config": "1.21.0",
     "hapi": "15.0.3",
     "hapi-swagger": "7.2.0",
