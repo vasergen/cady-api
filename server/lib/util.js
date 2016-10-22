@@ -78,6 +78,21 @@ function getSchemaModelFields(Model) {
     return _.keys(getModelSchema(Model))
 }
 
+function joiValidateAddRequired(joiRules, requiredFields) {
+    let validateRules = {}
+
+    _.forEach(joiRules, (rule, field) => {
+        if(requiredFields.indexOf(field) !== -1) {
+            validateRules[field] = rule.required()
+            return
+        }
+
+        validateRules[field] = rule
+    })
+
+    return validateRules
+}
+
 module.exports = {
     inspect,
     getMongoIdRegexp,
@@ -85,5 +100,6 @@ module.exports = {
     getCollectionName,
     getModelSchema,
     getAllModelFields,
-    getSchemaModelFields
+    getSchemaModelFields,
+    joiValidateAddRequired
 }

@@ -19,7 +19,9 @@ gulp.task('coverage', ['pre-coverage'], () => {
 
 gulp.task('test', () => {
     return gulp.src('server/**/*.spec.js')
-        .pipe(mocha({}))
+        .pipe(mocha({
+            //compilers: {js: babel}
+        }))
 })
 
 gulp.task('test:watch', ['test'], () => {

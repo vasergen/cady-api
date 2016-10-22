@@ -4,6 +4,7 @@ const expect = require('chai').expect
 const mongoose = require('mongoose')
 const util = require('./util')
 const sinon = require('sinon')
+const Joi = require('joi')
 
 describe('inspect', () => {
     it('should run util.inspect', () => {
@@ -125,6 +126,25 @@ describe('getSchemaModelFields', () => {
     afterEach(() => {
         delete mongoose.models.User
         delete mongoose.modelSchemas.User
+    })
+})
+
+describe('addRequiredToJoiRulesObj', () => {
+    const joiValidateAddRequired = util.joiValidateAddRequired
+
+    it('should add required to required fields', () => {
+        const joiRules = {
+            firstName: Joi.string(),
+            email: Joi.string(),
+            password: Joi.string()
+        }
+
+        const requiredFields = ['email', 'password']
+        const joiRequired = joiValidateAddRequired(joiRules, requiredFields)
+
+        expect(joiRequired.firstName._flags.presence).to.equal(undefined)
+        expect(joiRequired.email._flags.presence).to.equal('required')
+        expect(joiRequired.password._flags.presence).to.equal('required')
     })
 })
 

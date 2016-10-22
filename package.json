@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters test",
-    "test:watch": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters test:watch",
+    "test:watch": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters 'test:watch'",
     "commit": "commit-wizard",
     "lint": "node_modules/.bin/eslint server/**/*.js",
     "start:watch": "node_modules/.bin/nodemon --harmony_destructuring --harmony_default_parameters server/app.js",
@@ -45,6 +45,7 @@
     "hapi-swagger": "7.2.0",
     "joi": "9.1.1",
     "lodash": "4.16.4",
+    "md5": "2.2.1",
     "mongoose": "4.6.1",
     "nodemon": "1.10.2",
     "pre-git": "3.10.0",

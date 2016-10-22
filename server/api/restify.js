@@ -4,7 +4,7 @@ const _ = require('lodash')
 const logger = require('./../lib/logger')
 const util = require('./../lib/util')
 const Joi = require('joi')
-const header = require('./headers')
+const header = require('./../lib/headers')
 const boom = require('boom')
 
 /**
@@ -121,8 +121,8 @@ function _postRoute(Model) {
     const collectionName = util.getCollectionName(Model)
 
     function postHandler (request, reply) {
-        let data = request.payload
-        let user = new Model(data)
+        const data = request.payload
+        const user = new Model(data)
 
         user.save()
             .then((response) => {

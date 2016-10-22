@@ -10,6 +10,7 @@ const Joi = require('joi')
 *   firstName: 'Bob',
 *   lastName: 'Marlin'
 *   email: 'bob@gmail.com',
+*   password: '*****',
 *   languages: [
 *       {
 *           name: 'pl',
@@ -35,9 +36,10 @@ const Joi = require('joi')
 
 //Mongo Schema
 const UserSchema = BaseSchema({
-    firstName: { type: String, trim: true, default: '' },
-    lastName: { type: String, trim: true, default: '' },
-    email: { type: String, trim: true, default: '' },
+    firstName: {type: String, trim: true, default: ''},
+    lastName: {type: String, trim: true, default: ''},
+    email: {type: String, trim: true, default: ''},
+    password: {type: String},
     languages: {type: Array, trim: true, default: []},
     activeLanguage: {type: String, trim: true, default: ''},
     activeDictionary: {type: String, trim: true, default: ''}
@@ -46,7 +48,8 @@ const UserSchema = BaseSchema({
 UserSchema.statics.joiValidate = {
     firstName: Joi.string().alphanum().min(1).max(100),
     lastName: Joi.string().alphanum().min(1).max(100),
-    email: Joi.string().email()
+    email: Joi.string().email(),
+    password: Joi.string().min(1)
 }
 
 const UserModel = mongoose.model('User', UserSchema)
