@@ -7,14 +7,12 @@ const Joi = require('joi')
 //Mongo Schema
 const DictionarySchema = BaseSchema({
     name: {type: String, trim: true, required: true},
-    slug: {type: String, trim: true},
-    language: {type: String, trim: true, required: true}
+    slug: {type: String, trim: true}
 })
 
 DictionarySchema.statics.joiValidate = {
     name: Joi.string().alphanum().min(1).max(100).required(),
-    slug: Joi.string(),
-    language: Joi.string().alphanum().min(1).required()
+    slug: Joi.string()
 }
 
 const DictionaryModel = mongoose.model('Dictionary', DictionarySchema)
