@@ -41,11 +41,15 @@ function getCollectionName(Model) {
     const toCollectionName = mongooseUtils.toCollectionName
     const modelName = getModelName(Model)
 
+    let collection
+
     if(Model.schema.options.collection) {
-        return Model.schema.options.collection
+        collection = Model.schema.options.collection
+    } else {
+        collection = toCollectionName(modelName)
     }
 
-    return toCollectionName(modelName)
+    return _.toLower(collection)
 }
 
 /**

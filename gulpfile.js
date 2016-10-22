@@ -3,6 +3,7 @@
 const gulp = require('gulp')
 const mocha = require('gulp-mocha')
 const istanbul = require('gulp-istanbul')
+let babel = require('babel-register')
 
 gulp.task('pre-coverage', function () {
     return gulp.src(['server/**/*.js', '!server/**/*.spec.js'])

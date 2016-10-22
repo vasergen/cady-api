@@ -22,6 +22,7 @@ LanguageListSchema.statics.joiValidate = {
     language: Joi.string().alphanum().min(1).required()
 }
 
+LanguageListSchema.set('collection', 'languageslist') /*set correct name for collection*/
 const LanguageListModel = mongoose.model('LanguageList', LanguageListSchema)
 
 module.exports = LanguageListModel

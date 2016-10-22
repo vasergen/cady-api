@@ -4,7 +4,8 @@
   "description": "lang",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters test",
+    "test:watch": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters test:watch",
     "commit": "commit-wizard",
     "lint": "node_modules/.bin/eslint server/**/*.js",
     "start:watch": "node_modules/.bin/nodemon --harmony_destructuring --harmony_default_parameters server/app.js",
