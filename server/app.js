@@ -6,14 +6,17 @@ const serverStart = require('./lib/serverStart')
 const logger = require('./lib/logger')
 
 const db = dbConnect()
-const server = serverStart()
+const server = serverStart((err, server) => {
+    if (err) throw err
 
-server.route(routes)
+    server.route(routes)
 
-server.on('response', function (request) {
-    const message =
-        request.info.remoteAddress + ': ' + request.method.toUpperCase()
-        + ' ' + request.url.path + ' --> ' + request.response.statusCode
+    server.on('response', function (request) {
+        const message =
+            request.info.remoteAddress + ': ' + request.method.toUpperCase()
+            + ' ' + request.url.path + ' --> ' + request.response.statusCode
 
-    logger.info(message)
-});
+        logger.info(message)
+    })
+})
+

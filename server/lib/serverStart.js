@@ -7,6 +7,9 @@ const Inert = require('inert')
 const Vision = require('vision')
 const HapiSwagger = require('hapi-swagger')
 const Pack = require('./../../package')
+const hapiAuthBasic = require('hapi-auth-basic')
+const basicAuth = require('./../api/basicAuth')
+const User = require('./../models/user')
 
 const Documentation = {
     'register': HapiSwagger,
@@ -21,13 +24,11 @@ const Documentation = {
 const modules = [
     Inert,
     Vision,
-    Documentation
+    Documentation,
+    hapiAuthBasic
 ]
 
-module.exports = serverStart
-
-
-function serverStart() {
+function serverStart(cb) {
     const port = config.get('port')
     const host = config.get('host')
 
@@ -36,6 +37,11 @@ function serverStart() {
 
     server.register(modules, (err) => {
         if(err) throw err
+
+        const validation = basicAuth.basicValidation(User)
+        server.auth.strategy('default', 'basic', true, { validateFunc: validation })
+
+        cb && cb(null, server)
 
         server.start((err) => {
             if(err) throw err
@@ -46,3 +52,5 @@ function serverStart() {
 
     return server
 }
+
+module.exports = serverStart

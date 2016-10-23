@@ -3,6 +3,7 @@
 const mongoose = require('../lib/pmongoose')
 const BaseSchema = require('./baseSchema')
 const Joi = require('joi')
+const md5 = require('md5')
 
 /*
 * Example
@@ -51,6 +52,17 @@ UserSchema.statics.joiValidate = {
     email: Joi.string().email(),
     password: Joi.string().min(1)
 }
+
+UserSchema.methods.verifyPassword = function(password) {
+    return this.password === md5(password)
+}
+
+UserSchema.pre('save', function(next) {
+    if(this.password) {
+        this.password = md5(this.password)
+    }
+    next()
+})
 
 const UserModel = mongoose.model('User', UserSchema)
 
