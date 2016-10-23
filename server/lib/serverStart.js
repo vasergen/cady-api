@@ -38,7 +38,8 @@ function serverStart(cb) {
     server.register(modules, (err) => {
         if(err) throw err
 
-        const validation = basicAuth.basicValidation(User)
+        const validation = basicAuth.basicValidation(server, User)
+        /*setup basic auth as a default strategy by all routes*/
         server.auth.strategy('default', 'basic', true, { validateFunc: validation })
 
         cb && cb(null, server)

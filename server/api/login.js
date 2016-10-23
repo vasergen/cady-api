@@ -10,7 +10,7 @@ function _loginRoute() {
     function loginHandler(request, reply) {
         const user = request.auth.credentials
 
-        if(!user.email) {
+        if(!user._id) {
             logger.error('User object didn\'t found')
             return reply(Boom.badImplementation())
         }
