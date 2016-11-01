@@ -35,7 +35,7 @@ function _cachify (cache, Model, method) {
  * @param Query
  */
 function cachify(server, Model) {
-    const cache = Cache(server, {
+    const cache = new Cache(server, {
         segment: util.getModelName(Model),
         expiresIn: 10 * 60000 /*60000 ms == 1 minute*/
     })

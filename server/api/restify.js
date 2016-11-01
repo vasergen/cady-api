@@ -121,8 +121,8 @@ function _postRoute(Model) {
     const collectionName = util.getCollectionName(Model)
 
     function postHandler (request, reply) {
-        const data = request.payload
-        const user = new Model(data)
+        const payload = request.payload
+        const user = new Model(payload)
 
         user.save()
             .then((response) => {

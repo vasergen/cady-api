@@ -14,7 +14,7 @@ const tryCatch = util.tryCatch
  */
 function _signInRoute() {
     function signInHandler(request, reply) {
-        const user = request.auth.credentials
+        const user = request.User
 
         if(!user._id) {
             logger.error('User object didn\'t found')
@@ -79,6 +79,7 @@ module.exports = {
     /*private*/
     _signInRoute,
     _signUpRoute,
+
     /*public*/
     routes
 }

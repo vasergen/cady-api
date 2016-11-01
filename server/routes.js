@@ -17,8 +17,9 @@ const vocabularyRestifyRoutes = restify(Vocabulary)
 const dictionaryRestifyRoutes = restify(Dictionary)
 const languageListRestifyRoutes = restify(LanguageList)
 
-/*User API Routes*/
+/*Routes*/
 const loginRoutes = login()
+const userRoutes = require('./api/userApi').routes()
 
 /*Application Routes*/
 let routes = [].concat(
@@ -29,7 +30,8 @@ let routes = [].concat(
     languageListRestifyRoutes,
 
     /*login*/
-    loginRoutes
+    loginRoutes,
+    userRoutes
 )
 
 module.exports = routes

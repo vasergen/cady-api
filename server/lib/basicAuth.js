@@ -1,6 +1,6 @@
 'use strict'
 
-const logger = require('./../lib/logger')
+const logger = require('./logger')
 const _ = require('lodash')
 
 function basicValidation (server, UserModel) {
@@ -10,6 +10,7 @@ function basicValidation (server, UserModel) {
             const isMe = user && user.verifyPassword(password)
             if(isMe) { /*found user*/
                 const userWithoutPassword = _.omit(user.toObject(), ['password'])
+                request.User = userWithoutPassword /*add current user to request object*/
                 return callback(null, true, userWithoutPassword)
             }
 

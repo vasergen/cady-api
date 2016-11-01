@@ -96,7 +96,7 @@ function joiValidateAddRequired(joiRules, requiredFields) {
 }
 
 /**
- * get md5 for object or string
+ * Get md5 for object or string
  * @param value
  * @returns {*}
  */
@@ -140,6 +140,38 @@ function tryCatch(fn, catchFn) {
     }
 }
 
+/**
+ * Return user from request object
+ */
+function getUser(request) {
+    return _.get(request, 'auth.credentials')
+}
+
+/**
+ * Return slug
+ * @param string
+ * @returns {*}
+ */
+function slug(string) {
+    return _.kebabCase(string)
+}
+
+/**
+ * tryCatchHandler
+ * @param handler
+ * @returns {Function}
+ */
+function tryCatchHandler(handler) {
+    return (request, reply) => {
+        try {
+            handler(request, reply)
+        } catch(err) {
+            logger.error(err)
+            reply(err)
+        }
+    }
+}
+
 module.exports = {
     inspect,
     getMongoIdRegexp,
@@ -150,5 +182,8 @@ module.exports = {
     getSchemaModelFields,
     joiValidateAddRequired,
     getMd5,
-    tryCatch
+    tryCatch,
+    tryCatchHandler,
+    getUser,
+    slug
 }

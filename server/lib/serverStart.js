@@ -8,7 +8,7 @@ const Vision = require('vision')
 const HapiSwagger = require('hapi-swagger')
 const Pack = require('./../../package')
 const hapiAuthBasic = require('hapi-auth-basic')
-const basicAuth = require('./../api/basicAuth')
+const basicAuth = require('./basicAuth')
 const User = require('./../models/user')
 
 const Documentation = {

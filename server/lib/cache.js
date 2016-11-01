@@ -7,12 +7,14 @@
  * @returns {{get: get, set: set}}
  * @private
  */
-function Cache(server, options) {
-    const cache = server.cache(options)
+class Cache {
+    constructor(server, options) {
+        this.cache = server.cache(options)
+    }
 
-    function get(key) {
+    get(key) {
         return new Promise((resolve, reject) => {
-            cache.get(key, (err, value /*cached, log*/) => {
+            this.cache.get(key, (err, value /*cached, log*/) => {
                 if(err) {
                     return reject(err)
                 }
@@ -22,9 +24,9 @@ function Cache(server, options) {
         })
     }
 
-    function set(key, value) {
+    set(key, value) {
         return new Promise((resolve, reject) => {
-            cache.set(key, value, null, (err) => {
+            this.cache.set(key, value, null, (err) => {
                 if(err) {
                     return reject(err)
                 }
@@ -32,11 +34,6 @@ function Cache(server, options) {
                 return resolve(value)
             })
         })
-    }
-
-    return {
-        get: get,
-        set: set
     }
 }
 

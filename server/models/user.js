@@ -15,6 +15,7 @@ const md5 = require('md5')
 *   languages: [
 *       {
 *           name: 'pl',
+*           slug: 'pl',
 *           longName: 'Polish',
 *           dictionaries: [
 *               56asd345asadaad,
@@ -23,6 +24,7 @@ const md5 = require('md5')
 *       },
 *       {
 *           name: 'sp',
+*           slug: 'sp',
 *           longName: 'spanish',
 *           dictionaries: [
 *               56asd3454asdas6,

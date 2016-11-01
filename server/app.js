@@ -16,9 +16,8 @@ const server = serverStart((err, server) => { /*server register callback*/
 
     server.route(routes) /*add routes to app*/
 
-    /*let's cachify our models*/
     _.forEach(mongoose.models, (Model) => {
-        cachify(server, Model)
+        cachify(server, Model) /*let's cachify our models*/
     })
 })
 
