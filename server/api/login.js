@@ -4,10 +4,16 @@ const User = require('./../models/user')
 const util = require('./../lib/util')
 const logger = require('./../lib/logger')
 const Boom = require('boom')
-const Promise = require('bluebird')
 
-function _loginRoute() {
-    function loginHandler(request, reply) {
+const tryCatch = util.tryCatch
+
+/**
+ * Sign in
+ * @returns {{path: string, method: string, handler: signInHandler, config: {description: string, tags: string[]}}}
+ * @private
+ */
+function _signInRoute() {
+    function signInHandler(request, reply) {
         const user = request.auth.credentials
 
         if(!user._id) {
@@ -19,39 +25,39 @@ function _loginRoute() {
     }
 
     return {
-        path: '/login', method: 'GET', handler: loginHandler, config: {
+        path: '/login', method: 'GET', handler: signInHandler, config: {
             description: 'user login',
             tags: ['api']
         }
     }
 }
 
-function _registerRoute(UserModel) {
-    function registerHandler(request, reply) {
-        Promise.coroutine(function *() {
-            try {
-                const payload = request.payload
-                const count = yield UserModel.count({email: payload.email})
-                if(count) { /*duplicate*/
-                    const errMessage = `This email ${payload.email} has been taken`
-                    return reply(Boom.badData(errMessage))
-                }
+/**
+ * Sign up
+ * @param UserModel
+ * @returns {{path: string, method: string, handler: signUpHandler, config: {description: string, notes: *, tags: string[], validate: {payload: *}}}}
+ * @private
+ */
+function _signUpRoute(UserModel) {
+    async function signUpHandler(request, reply) {
+        const payload = request.payload
+        const count = await UserModel.count({email: payload.email})
+        if(count) { /*duplicate*/
+            const errMessage = `This email ${payload.email} has been taken`
+            return reply(Boom.badData(errMessage))
+        }
 
-                const user = new UserModel(payload)
-                const response = yield user.save()
-                return reply(response).code(201)
-            } catch(err) {
-                reply(err)
-                logger.error(err)
-            }
-        })()
+        const user = new UserModel(payload)
+        const response = await user.save()
+
+        return reply(response).code(201)
     }
 
     const requiredFields = ['firstName', 'email', 'password']
     const joiValidate = util.joiValidateAddRequired(UserModel.joiValidate, requiredFields)
 
     return {
-        path: '/register', method: 'POST', handler: registerHandler, config: {
+        path: '/register', method: 'POST', handler: tryCatch(signUpHandler), config: {
             description: 'register user',
             notes: `required fields: ${requiredFields.toString()}`,
             tags: ['api'],
@@ -64,15 +70,15 @@ function _registerRoute(UserModel) {
 
 function routes() {
     return [
-        _registerRoute(User),
-        _loginRoute()
+        _signUpRoute(User),
+        _signInRoute()
     ]
 }
 
 module.exports = {
     /*private*/
-    _loginRoute,
-    _registerRoute,
+    _signInRoute,
+    _signUpRoute,
     /*public*/
     routes
 }

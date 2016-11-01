@@ -1,10 +1,16 @@
 'use strict'
 
-const md5 = require('md5')
 const _ = require('lodash')
 const logger = require('./logger')
 const util = require('./util')
 
+/**
+ * Get cache object
+ * @param server
+ * @param options
+ * @returns {{get: get, set: set}}
+ * @private
+ */
 function _getCache(server, options) {
     const cache = server.cache(options)
 
@@ -38,57 +44,32 @@ function _getCache(server, options) {
     }
 }
 
-function _getMd5Key(value) {
-    let result = ''
-    if(_.isString(value)) {
-        result = value
-    } else if(_.isObject(value)) {
-        try {
-            result = JSON.stringify(value)
-        } catch(err) {
-            logger.error(err)
-        }
-    } else {
-        logger.warn('_getMd5Key', value)
-    }
-
-    return md5(result)
-}
-
 function _cachify (cache, Model, method) {
-    return function _findOne() {
+    return function _findCache() {
         const findBy = _.take(arguments)
         const modelName = util.getModelName(Model)
 
-        let isCashed = false
+        return new Promise(async (resolve, reject) => {
+            try {
+                const key = util.getMd5({modelName: modelName, find: findBy})
 
-        return new Promise((resolve, reject) => {
-            const key = _getMd5Key({modelName: modelName, find: findBy})
-            cache.get(key)
-                .then((cachedInstance) => {
-                    if(cachedInstance) {
-                        isCashed = true
-                        return cachedInstance
-                    }
-                    return Model[method].apply(Model, findBy)
-                })
-                .then((instanse) => {
-                    if(!isCashed) {
-                        cache.set(key, instanse)
-                    }
-                    let res = isCashed ? new Model(instanse) : instanse
-                    return resolve(res)
-                })
-                .catch((err) => {
-                    logger.error(err)
-                    return reject(err)
-                })
+                let modelObject = await cache.get(key)
+                if(!modelObject) {
+                    const instance = await Model[method].apply(Model, findBy)
+                    modelObject = instance.toObject()
+                    cache.set(key, modelObject)
+                }
+                return resolve(new Model(modelObject))
+            } catch(err) {
+                logger.error(err)
+                return reject(err)
+            }
         })
     }
 }
 
 /**
- * Let's add findOneCache and findCache to our models and use hapi cashing there
+ * Let's add methods findOneCache and findCache to our models and use hapi cashing there
  * @param server
  * @param Query
  */

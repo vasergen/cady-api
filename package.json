@@ -4,12 +4,13 @@
   "description": "lang",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters test",
-    "test:watch": "node_modules/.bin/gulp --harmony_destructuring --harmony_default_parameters 'test:watch'",
+    "test": "node_modules/.bin/gulp --harmony test",
+    "test:watch": "node_modules/.bin/gulp --harmony 'test:watch'",
     "commit": "commit-wizard",
     "lint": "node_modules/.bin/eslint server/**/*.js",
-    "start:watch": "node_modules/.bin/nodemon --harmony_destructuring --harmony_default_parameters server/app.js",
-    "start": "node --harmony_destructuring --harmony_default_parameters server/app.js",
+    "start:watch": "node_modules/.bin/nodemon --harmony server/app.js",
+    "start": "node --harmony server/app.js",
+    "mongo:restart": "docker start `docker ps -q -l`",
     "mongo:run": "docker run --name cady-mongo -p 27017:27017 -d -v /home/vasyl/github/cady-api/db/data:/data/db -v /home/vasyl/github/cady-api/db/configdb:/data/configdb mongo"
   },
   "config": {

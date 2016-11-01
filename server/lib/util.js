@@ -1,7 +1,9 @@
 'use strict'
 
-const util = require('util')
+const logger = require('./logger')
+const sysUtil = require('util')
 const _ = require('lodash')
+const md5 = require('md5')
 const mongooseUtils = require('./../../node_modules/mongoose/lib/utils.js')
 
 /**
@@ -11,7 +13,7 @@ const mongooseUtils = require('./../../node_modules/mongoose/lib/utils.js')
  */
 function inspect(obj) {
     /*eslint no-console: ["error", { allow: ["log"] }]*/
-    console.log(util.inspect(obj, { showHidden: false, depth: 1 }))
+    console.log(sysUtil.inspect(obj, { showHidden: false, depth: 1 }))
 }
 
 /**
@@ -93,6 +95,40 @@ function joiValidateAddRequired(joiRules, requiredFields) {
     return validateRules
 }
 
+function getMd5(value) {
+    let result = ''
+    if(_.isString(value)) {
+        result = value
+    } else if(_.isObject(value)) {
+        try {
+            result = JSON.stringify(value)
+        } catch(err) {
+            logger.error(err)
+        }
+    } else {
+        logger.warn('getMd5Key expect value as string or object', value)
+    }
+
+    return md5(result)
+}
+
+function tryCatch(fn, catchFn) {
+    const original = fn
+
+    return function decorated() {
+        try {
+            return original.apply(fn, arguments)
+        } catch (err) {
+            if(catchFn) {
+                catchFn.call(fn, err)
+            } else {
+                logger.error(err)
+                throw err
+            }
+        }
+    }
+}
+
 module.exports = {
     inspect,
     getMongoIdRegexp,
@@ -101,5 +137,7 @@ module.exports = {
     getModelSchema,
     getAllModelFields,
     getSchemaModelFields,
-    joiValidateAddRequired
+    joiValidateAddRequired,
+    getMd5,
+    tryCatch
 }
