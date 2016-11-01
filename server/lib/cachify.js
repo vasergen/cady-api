@@ -3,46 +3,7 @@
 const _ = require('lodash')
 const logger = require('./logger')
 const util = require('./util')
-
-/**
- * Get cache object
- * @param server
- * @param options
- * @returns {{get: get, set: set}}
- * @private
- */
-function _getCache(server, options) {
-    const cache = server.cache(options)
-
-    function get(key) {
-        return new Promise((resolve, reject) => {
-            cache.get(key, (err, value /*cached, log*/) => {
-                if(err) {
-                    return reject(err)
-                }
-
-                return resolve(value)
-            })
-        })
-    }
-
-    function set(key, value) {
-        return new Promise((resolve, reject) => {
-            cache.set(key, value, null, (err) => {
-                if(err) {
-                    return reject(err)
-                }
-
-                return resolve(value)
-            })
-        })
-    }
-
-    return {
-        get: get,
-        set: set
-    }
-}
+const Cache = require('./cache')
 
 function _cachify (cache, Model, method) {
     return function _findCache() {
@@ -74,8 +35,8 @@ function _cachify (cache, Model, method) {
  * @param Query
  */
 function cachify(server, Model) {
-    const cache = _getCache(server, {
-        segment: 'db',
+    const cache = Cache(server, {
+        segment: util.getModelName(Model),
         expiresIn: 10 * 60000 /*60000 ms == 1 minute*/
     })
 
@@ -88,7 +49,6 @@ function cachify(server, Model) {
 module.exports = {
     /*private*/
     _cachify,
-    _getCache,
 
     /*public*/
     cachify

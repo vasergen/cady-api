@@ -95,6 +95,11 @@ function joiValidateAddRequired(joiRules, requiredFields) {
     return validateRules
 }
 
+/**
+ * get md5 for object or string
+ * @param value
+ * @returns {*}
+ */
 function getMd5(value) {
     let result = ''
     if(_.isString(value)) {
@@ -112,6 +117,12 @@ function getMd5(value) {
     return md5(result)
 }
 
+/**
+ * Try catch decorator
+ * @param fn
+ * @param catchFn
+ * @returns {Function}
+ */
 function tryCatch(fn, catchFn) {
     const original = fn
 

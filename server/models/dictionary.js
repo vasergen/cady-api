@@ -11,7 +11,7 @@ const DictionarySchema = BaseSchema({
 })
 
 DictionarySchema.statics.joiValidate = {
-    name: Joi.string().alphanum().min(1).max(100).required(),
+    name: Joi.string().alphanum().min(1).max(100),
     slug: Joi.string()
 }
 
