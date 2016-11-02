@@ -2,58 +2,63 @@
 
 const User = require('./../models/user')
 const util = require('./../lib/util')
-const Boom = require('boom')
 const Joi = require('joi')
-const _ = require('lodash')
-
 const tch = util.tryCatchHandler
 
 function _postLanguageRoute(Model) {
     const collection = util.getCollectionName(Model)
 
-    const validate = {
-        name: Joi.string().min(1).required(),
-        longName: Joi.string().min(1).required()
-    }
-
-    async function postLanguageHandler(request, reply) {
+    function postLanguageHandler(request, reply) {
         const currentUser = request.User
-        const payload = _.pick(request.payload, _.keys(validate))
-        payload.dictionaries = []
-        payload.slug = util.slug(payload.name)
-
-        const user = await Model.findById({_id: currentUser._id})
-        const languages = _.filter(user.languages, {slug: payload.slug})
-
-        if(languages.length) { /*duplicate*/
-            const errMessage = `this language ${languages[0].name} already exist`
-            return reply(Boom.badData(errMessage))
-        }
-
-        const userUpdated = await Model.update({_id: currentUser._id}, {$push: {languages: payload}})
-        return reply(userUpdated)
+        const result = Model.addLanguage(currentUser._id, request.payload)
+        reply(result)
     }
 
     return {
-        path: `/${collection}/language`, method: 'POST', handler: tch(postLanguageHandler), config: {
-            description: 'create new dictionary',
+        path: `/${collection}/languages`, method: 'POST', handler: tch(postLanguageHandler), config: {
+            description: 'add new language',
             tags: ['api'],
             validate: {
-                payload: validate
+                payload: {
+                    name: Joi.string().min(1).required(),
+                    longName: Joi.string().min(1).required()
+                }
             }
+        }
+    }
+}
+
+function _getLanguagesRoute(Model) {
+    const collection = util.getCollectionName(Model)
+
+    async function getLanguageHandler(request, reply) {
+        const id = request.User._id
+
+        const user = await Model.findById(id)
+        const languages = user.languages || []
+        reply(languages)
+    }
+
+    return {
+        path: `/${collection}/languages`, method: 'GET', handler: tch(getLanguageHandler), config: {
+            description: 'get languages',
+            tags: ['api'],
+            validate: {}
         }
     }
 }
 
 function routes() {
     return [
-        _postLanguageRoute(User)
+        _postLanguageRoute(User),
+        _getLanguagesRoute(User)
     ]
 }
 
 module.exports = {
     /*private*/
     _postLanguageRoute,
+    _getLanguagesRoute,
 
     /*public*/
     routes

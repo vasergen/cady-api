@@ -4,6 +4,9 @@ const mongoose = require('../lib/pmongoose')
 const BaseSchema = require('./baseSchema')
 const Joi = require('joi')
 const md5 = require('md5')
+const _ = require('lodash')
+const Boom = require('boom')
+const util = require('./../lib/util')
 
 /*
 * Example
@@ -37,7 +40,7 @@ const md5 = require('md5')
 * }
 * */
 
-//Mongo Schema
+/*Schema*/
 const UserSchema = BaseSchema({
     firstName: {type: String, trim: true, default: ''},
     lastName: {type: String, trim: true, default: ''},
@@ -48,6 +51,11 @@ const UserSchema = BaseSchema({
     activeDictionary: {type: String, trim: true, default: ''}
 })
 
+/*Statics*/
+/**
+ * Joi Validate
+ * @type {{firstName: *, lastName: *, email: *, password: *}}
+ */
 UserSchema.statics.joiValidate = {
     firstName: Joi.string().alphanum().min(1).max(100),
     lastName: Joi.string().alphanum().min(1).max(100),
@@ -55,10 +63,41 @@ UserSchema.statics.joiValidate = {
     password: Joi.string().min(1)
 }
 
+/**
+ * Add language
+ * @param id
+ * @param payload
+ * @returns {*}
+ */
+UserSchema.statics.addLanguage = async function(id, payload) {
+    const acceptedFields = ['name', 'longName']
+    const data = _.pick(payload, acceptedFields)
+    data.slug = util.slug(payload.name)
+    data.dictionaries = []
+
+    const user = await this.findById({_id: id})
+    const languages = _.filter(user.languages, {slug: data.slug})
+
+    if(languages.length) { /*duplicate*/
+        const errMessage = `this language ${languages[0].name} already exist`
+        return Boom.badData(errMessage)
+    }
+
+    return await this.update({_id: id}, {$push: {languages: data}})
+}
+
+
+/*Methods*/
+/**
+ * Verify Password
+ * @param password
+ * @returns {boolean}
+ */
 UserSchema.methods.verifyPassword = function(password) {
     return this.password === md5(password)
 }
 
+/*Hooks*/
 UserSchema.pre('save', function(next) {
     if(this.password) {
         this.password = md5(this.password)
@@ -66,6 +105,6 @@ UserSchema.pre('save', function(next) {
     next()
 })
 
+/*Export*/
 const UserModel = mongoose.model('User', UserSchema)
-
 module.exports = UserModel
