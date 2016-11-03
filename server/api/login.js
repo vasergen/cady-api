@@ -58,6 +58,7 @@ function _signUpRoute(UserModel) {
 
     return {
         path: '/register', method: 'POST', handler: tryCatch(signUpHandler), config: {
+            auth: false,
             description: 'register user',
             notes: `required fields: ${requiredFields.toString()}`,
             tags: ['api'],
