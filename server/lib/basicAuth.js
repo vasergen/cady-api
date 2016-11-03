@@ -9,7 +9,7 @@ function basicValidation (server, UserModel) {
             const user = await UserModel.findOneCache({email: username})
             const isMe = user && user.verifyPassword(password)
             if(isMe) { /*found user*/
-                const userWithoutPassword = _.omit(user.toObject(), ['password'])
+                const userWithoutPassword = _.omit(user.toObject(), ['password_'])
                 request.User = userWithoutPassword /*add current user to request object*/
                 return callback(null, true, userWithoutPassword)
             }

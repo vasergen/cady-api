@@ -7,6 +7,7 @@ const md5 = require('md5')
 const _ = require('lodash')
 const Boom = require('boom')
 const util = require('./../lib/util')
+const Dictionary = require('./dictionary')
 
 /*
 * Example
@@ -31,7 +32,7 @@ const util = require('./../lib/util')
 *           longName: 'spanish',
 *           dictionaries: [
 *               56asd3454asdas6,
- *              56asd6y7jhhr643
+*              56asd6y7jhhr643
 *           ]
 *       }
 *   ]
@@ -86,6 +87,30 @@ UserSchema.statics.addLanguage = async function(id, payload) {
     return await this.update({_id: id}, {$push: {languages: data}})
 }
 
+/**
+ * Add dictionary
+ * @param id
+ * @param languageSlug
+ * @param payload
+ */
+UserSchema.statics.addDictionary = async function(id, languageSlug, payload) {
+    const user = await this.findById({_id: id})
+    const index = _.findIndex(user.languages, {'slug': languageSlug})
+
+    if(index === -1) { /*bad language*/
+        const errMessage = `can't find language by slug ${languageSlug}`
+        return Boom.badData(errMessage)
+    }
+
+    const data = payload
+    data.slug = util.slug(payload.name)
+    const dictionary = new Dictionary(data)
+    const savedDictionary = await dictionary.save()
+    user.languages[index].dictionaries.push(savedDictionary._id.toString())
+    const res = await this.update({_id: id}, user)
+
+    return res
+}
 
 /*Methods*/
 /**
